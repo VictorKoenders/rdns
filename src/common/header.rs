@@ -139,6 +139,12 @@ pub enum ResponseCode {
 impl From<u8> for ResponseCode {
     fn from(u: u8) -> Self {
         match u {
+            0 => ResponseCode::NoError,
+            1 => ResponseCode::FormatError,
+            2 => ResponseCode::ServerFailure,
+            3 => ResponseCode::NameError,
+            4 => ResponseCode::NotImplemented,
+            5 => ResponseCode::Refused,
             x => ResponseCode::Reserved(x),
         }
     }
