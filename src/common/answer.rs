@@ -40,8 +40,7 @@ impl<'a> Answer<'a> {
         if offset + 4 > data.len() {
             return Err(Error::EndOfSlice {
                 additional: offset + 4 - data.len(),
-            }
-            .into());
+            });
         }
         let r#type = NetworkEndian::read_u16(&data[offset..offset + 2]);
         let class = NetworkEndian::read_u16(&data[offset + 2..offset + 4]);
