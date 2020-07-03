@@ -11,8 +11,17 @@ pub struct DnsRequest<'a> {
     pub(crate) question_range: Range<usize>,
 }
 
+#[derive(Debug)]
+pub enum Error {
+    TooShort,
+    QuestionLengthInvalid(u16),
+}
+
 impl<'a> DnsRequest<'a> {
-    pub(crate) fn new(data: &'a [u8]) -> Self {
+    pub(crate) fn new(data: &'a [u8]) -> Result<Self, Error> {
+        if data.len() < 12 {
+            return Err(Error::TooShort);
+        }
         let mut result = DnsRequest {
             data,
             question_range: (0..0),
@@ -20,11 +29,14 @@ impl<'a> DnsRequest<'a> {
 
         let start = 12;
         let mut end = start;
-        for _ in 0..result.question_count() {
+        for i in 0..result.question_count() {
             end += DnsQuestionIterator::calculate_len(&data[end..]);
+            if end > data.len() {
+                return Err(Error::QuestionLengthInvalid(i));
+            }
         }
         result.question_range = start..end;
-        result
+        Ok(result)
     }
 
     fn get_u16(&self, offset: usize) -> u16 {

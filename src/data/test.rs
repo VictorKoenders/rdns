@@ -18,7 +18,7 @@ fn test_incoming_query() {
     ];
     assert_eq!(28, query.len());
 
-    let req = DnsRequest::new(query);
+    let req = DnsRequest::new(query).unwrap();
 
     assert_eq!(
         crate::utils::to_u16(&[41, 115]).unwrap(),

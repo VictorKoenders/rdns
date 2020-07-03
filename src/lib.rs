@@ -5,6 +5,8 @@ pub mod data;
 mod test;
 pub(crate) mod utils;
 
-pub fn request(data: &[u8]) -> data::DnsRequest {
+pub use data::Error as RequestError;
+
+pub fn parse_request(data: &[u8]) -> Result<data::DnsRequest, RequestError> {
     data::DnsRequest::new(data)
 }

@@ -12,7 +12,7 @@ fn main() {
         match socket.recv_from(&mut buffer) {
             Ok((size, addr)) => {
                 println!("{:?}", &buffer[..size]);
-                let request = rdns::request(&buffer[..size]);
+                let request = rdns::parse_request(&buffer[..size]).unwrap();
                 println!("[{:?}] Found {} request(s)", addr, request.question_count());
                 for question in request.questions() {
                     print!(" - {:?} record of ", question.qtype);
