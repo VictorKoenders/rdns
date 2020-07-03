@@ -1,0 +1,11 @@
+[package]
+name = "rdns"
+version = "0.1.0"
+authors = ["Trangar <victor.koenders@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+bitfield = "0.13.2"
+
+[profile.release]
+lto = true
