@@ -1,6 +1,6 @@
-pub use crate::common::{Header, Question};
+pub use crate::common::{AnswerError, Header, Question};
 
-use crate::common::Error as QuestionError;
+use crate::common::Answer;
 use arrayref::array_ref;
 use core::ops::Range;
 
@@ -17,19 +17,7 @@ pub enum Error {
 
     /// One of the label sequences in the request are invalid. This usually indicates a malformed packet.
     InvalidLabelSequence,
-
-    /// [TODO] Jumps are not implemented at the moment
-    JumpsNotImplemented,
-}
-
-impl From<QuestionError> for Error {
-    fn from(e: QuestionError) -> Self {
-        match e {
-            QuestionError::EndOfSlice { additional } => Self::EndOfSlice { additional },
-            QuestionError::InvalidLabelSequence => Self::InvalidLabelSequence,
-            QuestionError::JumpsNotImplemented => Self::JumpsNotImplemented,
-        }
-    }
+    Answer(AnswerError),
 }
 
 /// A client-to-server DNS request
@@ -39,6 +27,7 @@ pub struct Request<'a> {
 
     data: &'a [u8],
     question_range: Range<usize>,
+    answer_range: Range<usize>,
 }
 
 impl<'a> Request<'a> {
@@ -53,14 +42,21 @@ impl<'a> Request<'a> {
 
         let mut question_range = Header::SIZE..Header::SIZE;
         for _ in 0..header.question_count() {
-            let (_, range) = Question::parse(&data, question_range.end)?;
+            let (_, range) = Question::parse(data, question_range.end)?;
             question_range.end = range.end;
+        }
+
+        let mut answer_range = question_range.end..question_range.end;
+        for _ in 0..header.answer_count() {
+            let (_, range) = Answer::parse(&data, answer_range.end)?;
+            answer_range.end = range.end;
         }
 
         Ok(Self {
             header,
             data,
             question_range,
+            answer_range,
         })
     }
 
@@ -69,6 +65,13 @@ impl<'a> Request<'a> {
         QuestionIterator {
             data: self.data,
             range: self.question_range.clone(),
+        }
+    }
+    /// Return an iterator that iterates the questions in this request.
+    pub fn answers(&self) -> AnswerIterator {
+        AnswerIterator {
+            data: self.data,
+            range: self.answer_range.clone(),
         }
     }
 }
@@ -96,10 +99,34 @@ impl<'a> Iterator for QuestionIterator<'a> {
         }
     }
 }
+/// An iterator that iterates a list of answers.
+pub struct AnswerIterator<'a> {
+    data: &'a [u8],
+    range: Range<usize>,
+}
+
+impl<'a> Iterator for AnswerIterator<'a> {
+    type Item = Result<Answer<'a>, Error>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.range.start == self.range.end {
+            None
+        } else {
+            Some(match Answer::parse(self.data, self.range.start) {
+                Ok((question, range)) => {
+                    self.range.start = range.end;
+                    Ok(question)
+                }
+                Err(e) => Err(e.into()),
+            })
+        }
+    }
+}
 
 // These were test situations that crashed in the fuzzer
 #[test]
 fn fuzz() {
     let _ = Request::parse(&[2, 2, 38, 145, 145, 145, 145, 208, 145, 38, 145, 145, 145]);
     let _ = Request::parse(&[0, 0, 0, 0, 0, 255, 0, 0, 0, 0, 255, 0, 255, 0, 0, 0, 0, 150]);
+    let _ = Request::parse(&[255, 255, 0, 0, 0, 0, 1, 1, 195, 0, 0, 0, 0, 0, 109, 0, 0]);
 }
