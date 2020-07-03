@@ -1,12 +1,9 @@
 #![no_std]
 
-pub mod data;
+mod common;
+
+/// Contains structs for parsing DNS requests, which are send from the client to the server.
+pub mod request;
+
 #[cfg(test)]
 mod test;
-pub(crate) mod utils;
-
-pub use data::Error as RequestError;
-
-pub fn parse_request(data: &[u8]) -> Result<data::DnsRequest, RequestError> {
-    data::DnsRequest::new(data)
-}

@@ -22,43 +22,6 @@
             },
             "args": [],
             "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug executable 'rdns'",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--bin=rdns",
-                    "--package=rdns"
-                ],
-                "filter": {
-                    "name": "rdns",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'rdns'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=rdns",
-                    "--package=rdns"
-                ],
-                "filter": {
-                    "name": "rdns",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
         }
     ]
 }
